@@ -216,6 +216,7 @@ TOOL_CATEGORIES = {
                 "name": "Firecrawl Cloud",
                 "tag": "Hosted service - search, extract, and crawl",
                 "web_backend": "firecrawl",
+                "browser_login": "firecrawl",
                 "env_vars": [
                     {"key": "FIRECRAWL_API_KEY", "prompt": "Firecrawl API key", "url": "https://firecrawl.dev"},
                 ],
@@ -1045,6 +1046,14 @@ def _configure_provider(provider: dict, config: dict):
                     "  Direct credentials are still configured and may take precedence until you remove them from ~/.hermes/.env."
                 )
         return
+
+    # Browser-based login (e.g. Firecrawl PKCE flow)
+    if provider.get("browser_login") and sys.stdout.isatty():
+        from hermes_cli.firecrawl_auth import firecrawl_interactive_login
+        if firecrawl_interactive_login(config):
+            if provider.get("post_setup"):
+                _run_post_setup(provider["post_setup"])
+            return
 
     # Prompt for each required env var
     all_configured = True

@@ -4932,11 +4932,25 @@ For more help on a command:
         help="Platform to apply to (default: cli)",
     )
 
+    # hermes tools login [firecrawl]
+    tools_login_p = tools_sub.add_parser(
+        "login",
+        help="Browser-based login for tool services (e.g. Firecrawl)",
+    )
+    tools_login_p.add_argument(
+        "service", nargs="?", default="firecrawl",
+        choices=["firecrawl"],
+        help="Service to authenticate with (default: firecrawl)",
+    )
+
     def cmd_tools(args):
         action = getattr(args, "tools_action", None)
         if action in ("list", "disable", "enable"):
             from hermes_cli.tools_config import tools_disable_enable_command
             tools_disable_enable_command(args)
+        elif action == "login":
+            from hermes_cli.firecrawl_auth import firecrawl_login_command
+            firecrawl_login_command(args)
         else:
             _require_tty("tools")
             from hermes_cli.tools_config import tools_command
