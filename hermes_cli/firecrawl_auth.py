@@ -34,7 +34,7 @@ logger = logging.getLogger(__name__)
 
 # ─── Constants ───────────────────────────────────────────────────────────────
 
-FIRECRAWL_WEB_URL = "https://firecrawl.dev"
+FIRECRAWL_WEB_URL = "https://www.firecrawl.dev"
 FIRECRAWL_DEFAULT_API_URL = "https://api.firecrawl.dev"
 AUTH_TIMEOUT_SECONDS = 300  # 5 minutes
 POLL_INTERVAL_SECONDS = 2
@@ -86,7 +86,7 @@ def _poll_auth_status(
     """
     status_url = f"{web_url}/api/auth/cli/status"
     try:
-        with httpx.Client(timeout=10) as client:
+        with httpx.Client(timeout=10, follow_redirects=True) as client:
             resp = client.post(
                 status_url,
                 json={
@@ -95,16 +95,18 @@ def _poll_auth_status(
                 },
             )
         if not resp.is_success:
+            logger.debug("Poll response %s: %s", resp.status_code, resp.text[:200])
             return None
         data = resp.json()
+        logger.debug("Poll response data: %s", data)
         if data.get("status") == "complete" and data.get("apiKey"):
             return {
                 "api_key": data["apiKey"],
                 "api_url": data.get("apiUrl") or FIRECRAWL_DEFAULT_API_URL,
                 "team_name": data.get("teamName"),
             }
-    except Exception:
-        pass
+    except Exception as exc:
+        logger.debug("Poll exception: %s", exc)
     return None
 
 
